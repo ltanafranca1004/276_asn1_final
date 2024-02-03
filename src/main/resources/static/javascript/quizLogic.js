@@ -37,51 +37,55 @@ const quizQuestions = [
   
   document.addEventListener('DOMContentLoaded', () => {
     showQuestion(currentQuestionIndex);
+    updateNavigation(); // Ensure initial state is set correctly
   });
   
   function showQuestion(questionIndex) {
     const question = quizQuestions[questionIndex];
-    const quizContainer = document.getElementById('quiz');
-    const choicesList = document.getElementById('choices');
-    
-    // Update the question text
     document.getElementById('question').textContent = question.question;
-  
-    // Clear previous choices
+    const choicesList = document.getElementById('choices');
     choicesList.innerHTML = '';
   
-    // Populate the new choices
     question.choices.forEach((choice, index) => {
       const isChecked = userAnswers[questionIndex] === choice;
-      const radioInput = `<input type="radio" id="choice${index}" name="choice" value="${choice}" ${isChecked ? 'checked' : ''}>`;
-      const label = `<label for="choice${index}">${choice}</label>`;
       const li = document.createElement('li');
-      li.innerHTML = radioInput + label;
+      li.innerHTML = `<input type="radio" id="choice${index}" name="choice" value="${choice}" ${isChecked ? 'checked' : ''}>
+                      <label for="choice${index}">${choice}</label>`;
       choicesList.appendChild(li);
   
-      // Add change event listener to update user answers
       li.querySelector('input[type="radio"]').addEventListener('change', () => {
         userAnswers[questionIndex] = choice;
-        // Other logic to handle answer change if needed
+        updateNavigation(); // Update navigation state based on new selection
       });
     });
   
-    // Update navigation buttons (previous, next, submit)
-    updateNavigation();
+    updateNavigation(); // Call this to update the navigation state
   }
   
   function updateNavigation() {
     const isLastQuestion = currentQuestionIndex === quizQuestions.length - 1;
     document.getElementById('previous').disabled = currentQuestionIndex === 0;
-    document.getElementById('next').style.display = isLastQuestion ? 'none' : 'inline-block';
-    
+    document.getElementById('next').disabled = !userAnswers[currentQuestionIndex]; // Disable if no answer selected
     const submitBtn = document.getElementById('submit');
-    if (isLastQuestion) {
-        submitBtn.style.display = 'inline-block';
-    } else {
-        submitBtn.style.display = 'none';
-    }
+    submitBtn.style.display = isLastQuestion ? 'inline-block' : 'none';
+    submitBtn.disabled = !userAnswers[currentQuestionIndex]; // Disable if no answer selected for the last question
   }
+  
+  document.getElementById('next').addEventListener('click', () => {
+    if (currentQuestionIndex < quizQuestions.length - 1) {
+      currentQuestionIndex++;
+      showQuestion(currentQuestionIndex);
+    }
+  });
+  
+  document.getElementById('previous').addEventListener('click', () => {
+    if (currentQuestionIndex > 0) {
+      currentQuestionIndex--;
+      showQuestion(currentQuestionIndex);
+    }
+  });
+  
+  document.getElementById('submit').addEventListener('click', showResults);
   
   function showResults() {
     if (userAnswers.includes(null)) {
